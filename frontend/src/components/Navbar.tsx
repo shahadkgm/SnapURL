@@ -1,17 +1,30 @@
+import React from 'react';
 import { LogIn, LogOut, User as UserIcon } from 'lucide-react';
 import type { User } from '../api';
 
 interface NavbarProps {
   user: User | null;
-  onOpenAuth: (mode: 'login' | 'register') => void;
+  currentPage: 'home' | 'login' | 'register';
+  onNavigate: (page: 'home' | 'login' | 'register') => void;
   onLogout: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ user, onOpenAuth, onLogout }) => {
+export const Navbar: React.FC<NavbarProps> = ({
+  user,
+  currentPage,
+  onNavigate,
+  onLogout,
+}) => {
   return (
     <header className="navbar-container">
       <div className="navbar-content">
-        <div className="navbar-brand">
+        <div
+          className="navbar-brand cursor-pointer"
+          onClick={() => onNavigate('home')}
+          role="button"
+          tabIndex={0}
+          title="SnapLink Home"
+        >
           <img src="/favicon.svg" alt="SnapLink logo" className="brand-logo-img" width="28" height="28" />
           <span className="brand-title">SnapLink</span>
         </div>
@@ -36,16 +49,16 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onOpenAuth, onLogout }) =>
             <div className="guest-actions">
               <button
                 type="button"
-                className="btn-secondary btn-sm"
-                onClick={() => onOpenAuth('login')}
+                className={`btn-secondary btn-sm ${currentPage === 'login' ? 'active' : ''}`}
+                onClick={() => onNavigate('login')}
               >
                 <LogIn size={15} />
                 <span>Sign In</span>
               </button>
               <button
                 type="button"
-                className="btn-primary btn-sm"
-                onClick={() => onOpenAuth('register')}
+                className={`btn-primary btn-sm ${currentPage === 'register' ? 'active' : ''}`}
+                onClick={() => onNavigate('register')}
               >
                 <span>Get Started</span>
               </button>

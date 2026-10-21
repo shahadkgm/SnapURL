@@ -881,3 +881,65 @@
     width: 100%;
   }
 }
+
+/* Dedicated Auth Page Layout */
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.auth-page-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 24px 0;
+}
+
+.auth-page-card {
+  width: 100%;
+  max-width: 420px;
+  background: #ffffff;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: 32px 28px;
+}
+
+.auth-page-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-bottom: 18px;
+  padding: 4px 0;
+  transition: color 0.15s;
+}
+
+.auth-page-back-link:hover {
+  color: var(--text-main);
+}
+
+.auth-switch-footer {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.auth-switch-link {
+  background: none;
+  border: none;
+  color: var(--accent-blue);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.auth-switch-link:hover {
+  text-decoration: underline;
+}
