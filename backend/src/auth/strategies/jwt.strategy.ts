@@ -18,10 +18,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     @Inject(AUTH_SERVICE_TOKEN)
     private readonly authService: IAuthService,
   ) {
-    const jwtSecret = configService.get<string>('JWT_SECRET');
-    if (!jwtSecret) {
+    const rawSecret = configService.get<string>('JWT_SECRET');
+    if (!rawSecret) {
       throw new Error('JWT_SECRET environment variable is missing');
     }
+    const jwtSecret = String(rawSecret).replace(/^["']|["']$/g, '').trim();
 
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),

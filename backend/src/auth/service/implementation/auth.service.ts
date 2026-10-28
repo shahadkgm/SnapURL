@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { JwtService } from '@nestjs/jwt';
 import { Model } from 'mongoose';
@@ -10,6 +10,8 @@ import type { AuthResponse, IAuthService, SafeUser } from '../interface/IAuthSer
 
 @Injectable()
 export class AuthService implements IAuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     @InjectModel(User.name)
     private readonly userModel: Model<UserDocument>,
@@ -61,24 +63,36 @@ export class AuthService implements IAuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    // 2. Verify password with bcrypt
-    const isPasswordValid = await bcrypt.compare(dto.password, user.password);
-    if (!isPasswordValid) {
+    // 2. Verify password with bcrypt safely
+    try {
+      const isPasswordValid = await bcrypt.compare(dto.password, user.password);
+      if (!isPasswordValid) {
+        throw new UnauthorizedException('Invalid email or password');
+      }
+    } catch (err) {
+      if (err instanceof UnauthorizedException) {
+        throw err;
+      }
+      this.logger.warn(`Bcrypt compare failed for email ${normalizedEmail}: ${err}`);
       throw new UnauthorizedException('Invalid email or password');
     }
 
     // 3. Generate JWT token
-    const token = this.generateToken(user._id.toString(), user.email);
-
-    return {
-      user: {
-        id: user._id.toString(),
-        email: user.email,
-        name: user.name,
-        createdAt: (user as any).createdAt,
-      },
-      token,
-    };
+    try {
+      const token = this.generateToken(user._id.toString(), user.email);
+      return {
+        user: {
+          id: user._id.toString(),
+          email: user.email,
+          name: user.name,
+          createdAt: (user as any).createdAt,
+        },
+        token,
+      };
+    } catch (err) {
+      this.logger.error(`Token generation failed for ${normalizedEmail}:`, err);
+      throw err;
+    }
   }
 
   async validateUserById(userId: string): Promise<SafeUser> {
