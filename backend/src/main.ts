@@ -5,15 +5,30 @@ import { AppModule } from './app.module.js';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Enable CORS for the frontend app (supports multiple comma-separated URLs or wildcard)
+  // Enable CORS for frontend apps (supports configured origins, any Vercel domain, and localhost)
   const frontendEnv = process.env.FRONTEND_URL;
-  const allowedOrigins = frontendEnv
+  const configuredOrigins = frontendEnv
     ? frontendEnv.split(',').map((url) => url.trim().replace(/\/$/, ''))
     : ['http://localhost:5173'];
 
   app.enableCors({
-    origin: allowedOrigins.includes('*') ? true : allowedOrigins,
+    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+      // Allow requests with no origin (curl, mobile, server-to-server)
+      if (!origin) return callback(null, true);
+      const cleanOrigin = origin.replace(/\/$/, '');
+      if (
+        configuredOrigins.includes('*') ||
+        configuredOrigins.includes(cleanOrigin) ||
+        cleanOrigin.endsWith('.vercel.app') ||
+        cleanOrigin.includes('localhost')
+      ) {
+        return callback(null, true);
+      }
+      return callback(null, false);
+    },
     credentials: true,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: 'Content-Type,Accept,Authorization',
   });
 
   // Enable global DTO validation
