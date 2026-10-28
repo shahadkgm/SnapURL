@@ -17,14 +17,18 @@ import { User, UserSchema } from '../database/schemas/user.schema.js';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
-        const secret = configService.get<string>('JWT_SECRET');
-        if (!secret) {
+        const rawSecret = configService.get<string>('JWT_SECRET');
+        if (!rawSecret) {
           throw new Error('JWT_SECRET environment variable is missing');
         }
+        const secret = String(rawSecret).replace(/^["']|["']$/g, '').trim();
+        const rawExpiresIn = configService.get<string>('JWT_EXPIRES_IN', '7d');
+        const expiresIn = String(rawExpiresIn).replace(/^["']|["']$/g, '').trim() || '7d';
+
         return {
           secret,
           signOptions: {
-            expiresIn: configService.get<string>('JWT_EXPIRES_IN', '7d') as any,
+            expiresIn: expiresIn as any,
           },
         };
       },
