@@ -17,8 +17,11 @@ export class Url {
   @Prop({ default: 0 })
   clicks: number;
 
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true, index: true })
   userId: Types.ObjectId;
 }
 
 export const UrlSchema = SchemaFactory.createForClass(Url);
+
+UrlSchema.index({ userId: 1, originalUrl: 1 });
+UrlSchema.index({ userId: 1, createdAt: -1 });

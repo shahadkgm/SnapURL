@@ -8,9 +8,11 @@ import {
   Inject,
   Param,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { CreateUrlDto } from '../../dto/create-url.dto.js';
+import { PaginationQueryDto } from '../../dto/pagination-query.dto.js';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard.js';
 import { CurrentUser } from '../../../auth/decorators/current-user.decorator.js';
 import type { SafeUser } from '../../../auth/service/interface/IAuthService.js';
@@ -19,6 +21,7 @@ import {
   URLS_SERVICE_TOKEN,
   type FormattedUrl,
   type IUrlsService,
+  type PaginatedUrlsResponse,
 } from '../../service/interface/IUrlsService.js';
 import type { IUrlsController } from '../interface/IUrlsController.js';
 
@@ -36,11 +39,14 @@ export class UrlsController implements IUrlsController {
     return this.urlsService.create(dto, user.id);
   }
 
-  // GET /api/urls — Get all URLs for the logged-in user (protected)
+  // GET /api/urls — Get paginated URLs for the logged-in user (protected)
   @UseGuards(JwtAuthGuard)
   @Get()
-  findAll(@CurrentUser() user: SafeUser): Promise<FormattedUrl[]> {
-    return this.urlsService.findAllByUser(user.id);
+  findAll(
+    @CurrentUser() user: SafeUser,
+    @Query() query: PaginationQueryDto,
+  ): Promise<PaginatedUrlsResponse> {
+    return this.urlsService.findAllByUser(user.id, query);
   }
 
   // DELETE /api/urls/:id — Delete a URL (protected, owner only)

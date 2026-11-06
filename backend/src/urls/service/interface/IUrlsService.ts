@@ -1,4 +1,5 @@
 import type { CreateUrlDto } from '../../dto/create-url.dto.js';
+import type { PaginationQueryDto } from '../../dto/pagination-query.dto.js';
 
 export interface FormattedUrl {
   id: string;
@@ -11,9 +12,23 @@ export interface FormattedUrl {
   userId?: string;
 }
 
+export interface PaginationMeta {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
+export interface PaginatedUrlsResponse {
+  data: FormattedUrl[];
+  meta: PaginationMeta;
+}
+
 export interface IUrlsService {
   create(dto: CreateUrlDto, userId: string): Promise<FormattedUrl>;
-  findAllByUser(userId: string): Promise<FormattedUrl[]>;
+  findAllByUser(userId: string, query?: PaginationQueryDto): Promise<PaginatedUrlsResponse>;
   findOne(id: string, userId: string): Promise<FormattedUrl>;
   delete(id: string, userId: string): Promise<{ message: string }>;
   redirectAndTrack(code: string): Promise<string>;

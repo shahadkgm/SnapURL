@@ -22,6 +22,20 @@ export interface UrlItem {
   userId: string;
 }
 
+export interface PaginationMeta {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
+export interface PaginatedUrlsResponse {
+  data: UrlItem[];
+  meta: PaginationMeta;
+}
+
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const token = localStorage.getItem('snapurl_token');
   const headers: Record<string, string> = {
@@ -115,8 +129,37 @@ export const api = {
     });
   },
 
-  async getMyUrls(): Promise<UrlItem[]> {
-    return request<UrlItem[]>(API_ROUTES.URLS.GET_MY_URLS);
+  async getMyUrls(params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+  }): Promise<PaginatedUrlsResponse> {
+    const queryParams = new URLSearchParams();
+    if (params?.page) queryParams.set('page', params.page.toString());
+    if (params?.limit) queryParams.set('limit', params.limit.toString());
+    if (params?.search && params.search.trim()) queryParams.set('search', params.search.trim());
+
+    const queryStr = queryParams.toString();
+    const endpoint = queryStr ? `${API_ROUTES.URLS.GET_MY_URLS}?${queryStr}` : API_ROUTES.URLS.GET_MY_URLS;
+
+    const res = await request<PaginatedUrlsResponse | UrlItem[]>(endpoint);
+
+    // Defensive fallback: if an array is returned directly, wrap into PaginatedUrlsResponse
+    if (Array.isArray(res)) {
+      return {
+        data: res,
+        meta: {
+          total: res.length,
+          page: 1,
+          limit: res.length || 10,
+          totalPages: 1,
+          hasNextPage: false,
+          hasPrevPage: false,
+        },
+      };
+    }
+
+    return res;
   },
 
   async deleteUrl(id: string): Promise<{ success: boolean; message?: string }> {

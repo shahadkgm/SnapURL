@@ -19,6 +19,11 @@ interface HomePageProps {
   onDeleteUrl: (id: string) => void;
   onSearchChange: (query: string) => void;
   onNavigate: (page: 'home' | 'login' | 'register') => void;
+  currentPage?: number;
+  totalPages?: number;
+  totalCount?: number;
+  pageSize?: number;
+  onPageChange?: (page: number) => void;
 }
 
 export const HomePage: React.FC<HomePageProps> = ({
@@ -34,6 +39,11 @@ export const HomePage: React.FC<HomePageProps> = ({
   onDeleteUrl,
   onSearchChange,
   onNavigate,
+  currentPage,
+  totalPages,
+  totalCount,
+  pageSize,
+  onPageChange,
 }) => {
   return (
     <>
@@ -81,6 +91,11 @@ export const HomePage: React.FC<HomePageProps> = ({
           copiedId={copiedId}
           onCopy={onCopyUrl}
           onDelete={onDeleteUrl}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalCount={totalCount}
+          pageSize={pageSize}
+          onPageChange={onPageChange}
         />
       )}
 
