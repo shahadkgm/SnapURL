@@ -1,0 +1,69 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# SnapURL — Multi-container Docker Compose
+# Services:
+#   - mongo    : MongoDB database with persistent volume
+#   - backend  : NestJS API server (port 3000)
+#   - frontend : Vite React SPA served by Nginx (port 80)
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  # ── MongoDB ──────────────────────────────────────
+  mongo:
+    image: mongo:7-jammy
+    container_name: snapurl-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # ── NestJS Backend ───────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: snapurl-backend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      DATABASE_URL: mongodb://mongo:27017/snapurl
+      JWT_SECRET: ${JWT_SECRET:-snapurl_super_secret_jwt_key_2026}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      BASE_URL: ${BASE_URL:-http://localhost:3000}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
+    depends_on:
+      mongo:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/auth/me || true"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  # ── React Frontend (Nginx) ───────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:3000}
+    container_name: snapurl-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  mongo-data:
+    driver: local
+
